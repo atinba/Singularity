@@ -105,14 +105,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.25"
-  audiotagger:
+  audiotags:
     dependency: "direct main"
     description:
-      name: audiotagger
-      sha256: "1be5df15f099a82282aa03602d5e8da155182d0a144b7bd0e82499a9f61d9b82"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.1"
+      path: audiotags
+      relative: true
+    source: path
+    version: "1.4.3"
   boolean_selector:
     dependency: transitive
     description:
@@ -121,6 +120,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  build_cli_annotations:
+    dependency: transitive
+    description:
+      name: build_cli_annotations
+      sha256: b59d2769769efd6c9ff6d4c4cede0be115a566afc591705c2040b707534b1172
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   build_config:
     dependency: transitive
     description:
@@ -370,6 +377,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.27"
+  flutter_rust_bridge:
+    dependency: transitive
+    description:
+      name: flutter_rust_bridge
+      sha256: "35c257fc7f98e34c1314d6c145e5ed54e7c94e8a9f469947e31c9298177d546f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.7.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter

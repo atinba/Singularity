@@ -1,0 +1,15 @@
+[package]
+name = "audiotags"
+version = "1.4.3"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.7.0"
+lofty = "0.18.2"
+anyhow = "1.0.68"
+
+[profile.release]
+lto = true

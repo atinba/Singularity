@@ -1,0 +1,46 @@
+name: audiotags
+description: Read and write audio metadata in Flutter. Supports multiple formats.
+version: 1.4.3
+homepage: https://github.com/erikas-taroza/audiotags
+repository: https://github.com/erikas-taroza/audiotags
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+  ffi: ^2.0.1
+  flutter_rust_bridge: 2.7.0
+  meta: ^1.8.0
+  uuid: any
+  freezed_annotation: ^2.4.1
+  # Needed to run codegen. Uncomment to run codegen, otherwise keep it commented so the package can be published.
+  # rust_lib_audiotags:
+  #   path: rust_builder
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  ffigen: ^9.0.1
+  build_runner: ^2.4.6
+  freezed: ^2.4.2
+  analyzer: ^6.4.1
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.erikas.audiotags
+        pluginClass: AudiotagsPlugin
+      ios:
+        pluginClass: AudiotagsPlugin
+      linux:
+        pluginClass: AudiotagsPlugin
+      macos:
+        pluginClass: AudiotagsPlugin
+      windows:
+        pluginClass: AudiotagsPluginCApi

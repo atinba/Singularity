@@ -72,12 +72,13 @@ android {
         variant.outputs.all { output ->
             def builtType = variant.buildType.name
             def versionName = variant.versionName
+            def versionCode = variant.versionCode
 
             def abi = output.getFilter("ABI")
             if (abi != null) {
-                outputFileName = "singularity-${versionName}-${abi}.apk"
+                outputFileName = "singularity-${versionName}${versionCode}-${abi}.apk"
             } else {
-                outputFileName = "singularity-${versionName}.apk"
+                outputFileName = "singularity-${versionName}f${versionCode}.apk"
             }
         }
     }

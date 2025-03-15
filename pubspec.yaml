@@ -4,7 +4,7 @@ description: An Open Source Music Player App.
 # Prevent accidental publishing to pub.dev.
 publish_to: "none"
 
-version: 0.1.2
+version: 0.1.2+2
 
 environment:
   sdk: ">=3.1.0 <4.0.0"
@@ -13,7 +13,8 @@ environment:
 dependencies:
   app_links: ^6.4.0
   audio_service: ^0.18.12
-  audiotagger: ^2.2.1
+  audiotags:
+    path: ./audiotags
   cached_network_image: ^3.3.1
   carousel_slider: ^5.0.0
   cupertino_icons: ^1.0.6

@@ -23,7 +23,7 @@
         platformVersions = ["35" "34" "33" "31"];
         abiVersions = [];
         includeNDK = true;
-        ndkVersions = ["21.4.7075529"];
+        ndkVersions = ["25.1.8937393" "26.1.10909125"];
         cmakeVersions = ["3.22.1"];
         includeSystemImages = false;
         includeEmulator = false;

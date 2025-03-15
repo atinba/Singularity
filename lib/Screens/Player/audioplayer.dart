@@ -1,10 +1,9 @@
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:audiotagger/audiotagger.dart';
+import 'package:audiotags/audiotags.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/cupertino.dart';
@@ -2565,7 +2564,7 @@ class _LyricsProviderState extends State<LyricsProvider> {
         artist: widget.mediaItem.artist.toString(),
         album: widget.mediaItem.album?.toString() ?? '',
         duration: (widget.mediaItem.duration?.inSeconds ?? 180).toString(),
-      ).then((Map value) {
+      ).then((Map value) async {
         if (widget.mediaItem.id != value['id']) {
           done.value = true;
           return;
@@ -2583,18 +2582,25 @@ class _LyricsProviderState extends State<LyricsProvider> {
         // always save lyrics for offline songs if not present
         if (widget.offline) {
           Logger.root.info('Started lyrics tag editing');
-          final tagger = Audiotagger();
-          tagger
-              .writeTag(
-            path: widget.mediaItem.extras!['url'].toString(),
-            tagField: 'lyrics',
-            value: lyrics['lyrics'].toString(),
-          )
-              .then(
-            (bool? result) {
-              Logger.root.info('Finished lyrics tag editing');
-            },
+          final Tag? tag =
+              await AudioTags.read(widget.mediaItem.extras!['url'].toString());
+          final Tag newTags = Tag(
+            title: tag?.title,
+            trackArtist: tag?.trackArtist,
+            album: tag?.album,
+            albumArtist: tag?.albumArtist,
+            genre: tag?.genre,
+            year: tag?.year,
+            trackNumber: tag?.trackNumber,
+            trackTotal: tag?.trackTotal,
+            discNumber: tag?.discNumber,
+            discTotal: tag?.discTotal,
+            pictures: tag!.pictures,
+            lyrics: lyrics['lyrics'].toString(),
           );
+
+          await AudioTags.write(widget.mediaItem.extras!['url'].toString(), newTags);
+          ;
         }
       });
     }

@@ -588,7 +588,7 @@ class YouTubeServices {
 
   Future<List<AudioOnlyStreamInfo>> getStreamInfo(
     String videoId, {
-    bool onlyMp4 = false,
+    bool onlyMp4 = true,
   }) async {
     final StreamManifest manifest =
         await yt.videos.streamsClient.getManifest(VideoId(videoId));

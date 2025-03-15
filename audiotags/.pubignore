@@ -1,0 +1,7 @@
+audiotags.dll
+libaudiotags.so
+libaudiotags.a
+ios/Frameworks/audiotags.xcframework
+*.zip
+*.tar.gz
+samples

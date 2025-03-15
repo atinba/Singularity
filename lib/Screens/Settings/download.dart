@@ -337,23 +337,6 @@ class _DownloadPageState extends State<DownloadPage> {
               isThreeLine: true,
               defaultValue: false,
             ),
-            BoxSwitchTile(
-              title: Text(
-                AppLocalizations.of(
-                  context,
-                )!
-                    .downLyrics,
-              ),
-              subtitle: Text(
-                AppLocalizations.of(
-                  context,
-                )!
-                    .downLyricsSub,
-              ),
-              keyName: 'downloadLyrics',
-              defaultValue: false,
-              isThreeLine: true,
-            ),
           ],
         ),
       ),

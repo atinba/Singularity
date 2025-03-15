@@ -1,8 +1,6 @@
-
 import 'dart:io';
 
-import 'package:audiotagger/audiotagger.dart';
-import 'package:audiotagger/models/tag.dart';
+import 'package:audiotags/audiotags.dart';
 // import 'package:ffmpeg_kit_flutter_audio/ffmpeg_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -51,8 +49,6 @@ class Download with ChangeNotifier {
       Hive.box('settings').get('numberAlbumSongs', defaultValue: false) as bool;
   double? progress = 0.0;
   String lastDownloadId = '';
-  bool downloadLyrics =
-      Hive.box('settings').get('downloadLyrics', defaultValue: false) as bool;
   bool download = true;
 
   Future<void> prepareDownload(
@@ -301,7 +297,6 @@ class Download with ChangeNotifier {
     late String filepath2;
     String? appPath;
     final List<int> bytes = [];
-    String lyrics = '';
     final artname = fileName.replaceAll('.m4a', '.jpg');
     if (!Platform.isWindows) {
       Logger.root.info('Getting App Path for storing image');
@@ -411,126 +406,17 @@ class Download with ChangeNotifier {
         final File file2 = File(filepath2);
 
         file2.writeAsBytesSync(bytes2);
-        try {
-          Logger.root.info('Checking if lyrics required');
-          if (downloadLyrics) {
-            Logger.root.info('downloading lyrics');
-            final Map res = await Lyrics.getLyrics(
-              id: data['id'].toString(),
-              title: data['title'].toString(),
-              artist: data['artist']?.toString() ?? '',
-              album: data['album']?.toString() ?? '',
-              duration: data['duration']?.toString() ?? '180',
-              saavnHas: data['has_lyrics'] == 'true',
-            );
-            lyrics = res['lyrics'].toString();
-          }
-        } catch (e) {
-          Logger.root.severe('Error fetching lyrics: $e');
-          lyrics = '';
-        }
-        // commented out not to use FFmpeg as it increases the size of the app
-        // can uncomment this if you want to use FFmpeg to convert the audio format
-        // to any desired codec instead of the default m4a one.
 
-        // final List<String> availableFormats = ['m4a'];
-        // if (downloadFormat != 'm4a' &&
-        //     availableFormats.contains(downloadFormat)) {
-        //   List<String>? argsList;
-        //   if (downloadFormat == 'mp3') {
-        //     argsList = [
-        //       '-y',
-        //       '-i',
-        //       '$filepath',
-        //       '-c:a',
-        //       'libmp3lame',
-        //       '-b:a',
-        //       '320k',
-        //       filepath!.replaceAll('.m4a', '.mp3'),
-        //     ];
-        //   }
-        //   if (downloadFormat == 'm4a') {
-        //     argsList = [
-        //       '-y',
-        //       '-i',
-        //       filepath!,
-        //       '-c:a',
-        //       'aac',
-        //       '-b:a',
-        //       '320k',
-        //       filepath!.replaceAll('.m4a', '.m4a'),
-        //     ];
-        //   }
-        //   if (argsList != null) {
-        //     Logger.root.info('Converting audio to $downloadFormat');
-        //     await FFmpegKit.executeWithArguments(argsList);
-        //     Logger.root.info('Conversion complete, deleting old file');
-        //     await File(filepath!).delete();
-        //     filepath = filepath!.replaceAll('.m4a', '.$downloadFormat');
-        //   }
-        // }
-        Logger.root.info('Getting audio tags');
-        if (Platform.isAndroid) {
-          try {
-            final Tag tag = Tag(
-              title: data['title'].toString(),
-              artist: data['artist'].toString(),
-              albumArtist: data['album_artist']?.toString() ??
-                  data['artist']?.toString().split(', ')[0] ??
-                  '',
-              artwork: filepath2,
-              album: data['album'].toString(),
-              year: data['year'].toString(),
-              lyrics: lyrics,
-              trackNumber: data['trackNumber']?.toString(),
-              trackTotal: data['trackTotal']?.toString(),
-            );
-            Logger.root.info('Started tag editing');
-            final tagger = Audiotagger();
-            await tagger.writeTags(
-              path: filepath!,
-              tag: tag,
-            );
-            // await Future.delayed(const Duration(seconds: 1), () async {
-            //   if (await file2.exists()) {
-            //     await file2.delete();
-            //   }
-            // });
-          } catch (e) {
-            Logger.root.severe('Error editing tags: $e');
-          }
-        }
+        data['lyrics'] = await getLyrics(data);
+        writeTags(filepath!, data, bytes2);
+
         Logger.root.info('Closing connection & notifying listeners');
         client.close();
         lastDownloadId = data['id'].toString();
         progress = 0.0;
         notifyListeners();
 
-        Logger.root.info('Putting data to downloads database');
-        final songData = {
-          'id': data['id'].toString(),
-          'title': data['title'].toString(),
-          'subtitle': data['subtitle'].toString(),
-          'artist': data['artist'].toString(),
-          'albumArtist': data['album_artist']?.toString() ??
-              data['artist']?.toString().split(', ')[0],
-          'album': data['album'].toString(),
-          'genre': data['language'].toString(),
-          'year': data['year'].toString(),
-          'lyrics': lyrics,
-          'duration': data['duration'],
-          'release_date': data['release_date'].toString(),
-          'album_id': data['album_id'].toString(),
-          'perma_url': data['perma_url'].toString(),
-          'quality': preferredDownloadQuality,
-          'path': filepath,
-          'image': filepath2,
-          'image_url': data['image'].toString(),
-          'from_yt': data['language'].toString() == 'YouTube',
-          'dateAdded': DateTime.now().toString(),
-        };
-        Hive.box('downloads').put(songData['id'].toString(), songData);
-
+        saveSongDataInDB(data, filepath!, filepath2);
         Logger.root.info('Everything Done!');
         // ShowSnackBar().showSnackBar(
         //   context,
@@ -543,5 +429,83 @@ class Download with ChangeNotifier {
         File(filepath2).delete();
       }
     });
+  }
+
+  Future<void> writeTags(String filepath, Map data, Uint8List bytes) async {
+    Logger.root.info('Writing audio tags');
+    try {
+      final Tag tag = Tag(
+        title: data['title'].toString(),
+        trackArtist: data['artist'].toString(),
+        albumArtist: data['album_artist']?.toString() ??
+            data['artist']?.toString().split(', ')[0] ??
+            '',
+        album: data['album'].toString(),
+        year: int.tryParse(data['year'].toString()),
+        lyrics: data['lyrics'].toString(),
+        trackNumber: int.tryParse(data['trackNumber'].toString()),
+        trackTotal: int.tryParse(data['trackTotal'].toString()),
+        discNumber: int.tryParse(data['discNumber'].toString()),
+        discTotal: int.tryParse(data['discTotal'].toString()),
+        duration: int.tryParse(data['duration'].toString()),
+        // genre: ,
+        pictures: [
+          Picture(
+            bytes: bytes,
+            mimeType: MimeType.jpeg,
+            pictureType: PictureType.coverFront,
+          ),
+        ],
+      );
+
+      await AudioTags.write(filepath, tag);
+    } catch (e) {
+      Logger.root.severe('Error writing tags: $e');
+    }
+  }
+
+  Future<String> getLyrics(Map data) async {
+    Logger.root.info('Downloading lyrics');
+    try {
+      final Map res = await Lyrics.getLyrics(
+        id: data['id'].toString(),
+        title: data['title'].toString(),
+        artist: data['artist']?.toString() ?? '',
+        album: data['album']?.toString() ?? '',
+        duration: data['duration']?.toString() ?? '180',
+        saavnHas: data['has_lyrics'] == 'true',
+      );
+      return res['lyrics'].toString();
+    } catch (e) {
+      Logger.root.severe('Error fetching lyrics: $e');
+      return '';
+    }
+  }
+
+  void saveSongDataInDB(Map data, String filepath, String filepath2) {
+    Logger.root.info('Putting data to downloads database');
+    final songData = {
+      'id': data['id'].toString(),
+      'title': data['title'].toString(),
+      'subtitle': data['subtitle'].toString(),
+      'artist': data['artist'].toString(),
+      'albumArtist': data['album_artist']?.toString() ??
+          data['artist']?.toString().split(', ')[0],
+      'album': data['album'].toString(),
+      'genre': data['genre'].toString(),
+      'year': data['year'].toString(),
+      'lyrics': data['lyrics'].toString(),
+      'duration': data['duration'],
+      'release_date': data['release_date'].toString(),
+      'album_id': data['album_id'].toString(),
+      'perma_url': data['perma_url'].toString(),
+      'quality': preferredDownloadQuality,
+      'path': filepath,
+      'image': filepath2,
+      'image_url': data['image'].toString(),
+      'from_yt': data['language'].toString() == 'YouTube',
+      'dateAdded': DateTime.now().toString(),
+    };
+    Hive.box('downloads').put(songData['id'].toString(), songData);
   }
 }
